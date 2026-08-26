@@ -194,6 +194,70 @@ const CSS = `
 .tbl td{padding:12px;border-bottom:1px solid var(--line);white-space:nowrap}
 .tbl tr:last-child td{border-bottom:none}
 
+/* --- vardiya aktarımı --- */
+.shift-end{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:20px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.ho-progress{text-align:right;font-family:'IBM Plex Mono'}
+.ho-progress b{font-size:24px;color:var(--wheat)}
+.ho-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px}
+.ho-card{display:flex;flex-direction:column;gap:12px;border-left:4px solid var(--line)}
+.ho-card.ho-ok{border-left-color:var(--green)}
+.ho-card.ho-clean{border-left-color:var(--green)}
+.ho-card.ho-issue{border-left-color:var(--amber)}
+.ho-head{display:flex;align-items:flex-start;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.ho-icon{font-size:26px;line-height:1}
+.ho-tick{margin-left:auto;color:var(--green);font-size:22px;font-weight:800}
+.ho-head .pill{margin-left:auto;flex:none}
+.ho-clear{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg);
+  border:2px solid var(--line);border-radius:10px;cursor:pointer;font-weight:600;min-height:56px}
+.ho-clear.on{border-color:var(--green);background:rgba(47,191,113,.08);color:var(--green)}
+.ho-clear input{width:26px;height:26px;accent-color:var(--green);flex:none}
+.ho-disabled{opacity:.5;cursor:not-allowed}
+.ho-block-txt{margin-left:auto;font-style:normal;font-size:12px;color:var(--amber);font-weight:500}
+.ho-note{background:var(--bg);border-radius:8px;padding:14px 16px;margin:0;line-height:1.6;white-space:pre-wrap}
+.ho-read{cursor:default}
+.ho-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px}
+.ho-meta-l{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.banner-warn{display:flex;gap:16px;align-items:flex-start;border-left:4px solid var(--amber)}
+.banner-icon{font-size:26px;line-height:1}
+
+/* --- giriş ekranı makine seçimi --- */
+.login-card.wide{width:min(680px,100%)}
+.login-step{display:flex;gap:14px;align-items:flex-start}
+.login-step-body{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.login-locked{opacity:.4;pointer-events:none}
+.step-badge{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--line);
+  display:grid;place-items:center;font-family:'Archivo';font-weight:800;font-size:15px;color:var(--wheat);flex:none;margin-top:20px}
+.lbl-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.link-btn{background:none;border:none;color:var(--wheat);font-family:inherit;font-size:13px;
+  font-weight:600;cursor:pointer;text-decoration:underline;padding:4px}
+.login-ok{color:var(--green);font-weight:600;font-size:14px;margin:0}
+.mach-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:290px;overflow-y:auto;padding-right:4px}
+.mach-opt{display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg);
+  border:2px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink);
+  font-family:inherit;font-size:14px;cursor:pointer;min-height:52px}
+.mach-opt:hover{border-color:var(--muted)}
+.mach-opt.on{border-color:var(--wheat);background:rgba(240,180,41,.1)}
+.mach-name{flex:1;line-height:1.3}
+.mach-hint{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;flex:none}
+.radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;position:relative}
+.radio.on{border-color:var(--wheat)}
+.radio.on::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--wheat)}
+
+/* --- bilgi eksikliği / eğitim talebi --- */
+.kg-card{border-left:4px solid var(--line)}
+.kg-card.kg-on{border-left-color:var(--blue)}
+.kg-check{display:flex;gap:14px;align-items:flex-start;cursor:pointer}
+.kg-check input{width:26px;height:26px;accent-color:var(--blue);flex:none;margin-top:4px}
+.kg-detail{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.kg-row{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.kg-l{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);min-width:150px}
+.kg-training{color:var(--blue);font-size:17px}
+.mail-sent{display:flex;gap:14px;align-items:flex-start;text-align:left;background:var(--bg);
+  border:1px solid var(--blue);border-radius:10px;padding:16px 18px;margin:6px 0}
+.mail-icon{font-size:24px;line-height:1}
+.mail-sent b{color:var(--blue);display:block;margin-bottom:4px;line-height:1.4}
+
 @media (max-width:1000px){
   .cascade{grid-template-columns:1fr}
   .col{max-height:none}
@@ -204,6 +268,8 @@ const CSS = `
   .screen{padding:16px 14px 140px}
   .tri{grid-template-columns:1fr}
   .btn-huge{font-size:21px;padding:26px}
+  .mach-picker{grid-template-columns:1fr}
+  .kg-l{min-width:0}
 }
 .app :focus-visible{outline:3px solid var(--wheat);outline-offset:2px}
 `;
@@ -227,6 +293,15 @@ const HT = {
   YAG: { t: "Yağ seviyesi düşük", route: "A" },
 };
 
+/* SİGRES hattı iki ayrı makineden oluşur; ikisi de aynı parça listesini kullanır. */
+(function splitSigres() {
+  const base = MACHINES["SİGRES"];
+  if (!base) return;
+  const rebuilt = {};
+  Object.keys(MACHINES).forEach((k) => {
+    if (k === "SİGRES") {
+      rebuilt["1. SİGRES MAKİNESİ"] = base;
+      rebuilt["2. SİGRES MAKİNESİ"] = [...base];
     } else {
       rebuilt[k] = MACHINES[k];
     }
@@ -234,6 +309,7 @@ const HT = {
   Object.keys(MACHINES).forEach((k) => delete MACHINES[k]);
   Object.assign(MACHINES, rebuilt);
 })();
+
 const MACHINE_LIST = Object.keys(MACHINES);
 
 const CLIT_TEMPLATE = {
@@ -271,6 +347,30 @@ const CLIT_META = {
 
 const MAINT_ARRIVAL_MIN = 15;
 
+/* ---- Vardiya aktarım kategorileri ---- */
+const HANDOVER_CATS = [
+  {
+    key: "isg",
+    label: "İSG",
+    full: "İş Sağlığı ve Güvenliği",
+    icon: "🦺",
+    hint: "Kaza, ramak kala, koruma kapağı, dökülme, acil stop durumu",
+  },
+  {
+    key: "uretim",
+    label: "Üretim",
+    full: "Üretim Durumu",
+    icon: "📦",
+    hint: "Dönüşüm durumu, personel eksikliği, hız kaybı, fire",
+  },
+  {
+    key: "bakim",
+    label: "Bakım",
+    full: "Ekipman ve Bakım",
+    icon: "🔧",
+    hint: "Arıza, yavaş çalışma, bekleyen MAINGO iş emri",
+  },
+  {
     key: "diger",
     label: "Diğer",
     full: "Diğer Notlar",
@@ -312,6 +412,9 @@ function seedRecords() {
     ["SİLİNDİRLER", "1080 Burç", "HT03", null, "B"],
     ["TAMBUR", "1170 Dişli", "HT04", 6, "A"],
     ["DEDEKTÖR", "1270 Fotosel", "HT14", 4, "A"],
+    ["1. SİGRES MAKİNESİ", "2120 Folyo çekme grubu", "HT02", 7, "A"],
+    ["1. SİGRES MAKİNESİ", "1040 Bıçak", "HT14", 5, "A"],
+    ["2. SİGRES MAKİNESİ", "2160 Makas", "HT04", 4, "A"],
     ["2. SİGRES MAKİNESİ", "1800 Rezistans", "HT12", null, "B"],
   ];
   const base = Date.now() - 6 * 864e5;
@@ -1462,6 +1565,21 @@ function Dashboard({ records, archive = [], onBack }) {
                   <th>Tarih</th>
                 </tr>
               </thead>
+              <tbody>
+                {records
+                  .filter((r) => r.training)
+                  .reverse()
+                  .map((r) => (
+                    <tr key={r.id}>
+                      <td>{r.training}</td>
+                      <td>{r.machine}</td>
+                      <td>{r.part}</td>
+                      <td className="mono">{r.code === "YAG" ? "YAĞ" : r.code}</td>
+                      <td>{fmt(r.start)}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         </section>
       )}
@@ -1514,6 +1632,18 @@ export default function App() {
   const [view, setView] = useState("login");
   const [records, setRecords] = useState(seedRecords);
   const [active, setActive] = useState(null);
+  // Onay bekleyen vardiya aktarım raporları: { [machine]: handover }
+  const [pendingHandover, setPendingHandover] = useState(() => seedHandovers(seedRecords()));
+  const [incomingReport, setIncomingReport] = useState(null);
+  const [archive, setArchive] = useState([]);
+  const op = opId
+    ? { ...OPERATORS[opId], machine: chosenMachine || OPERATORS[opId].machine }
+    : null;
+
+  const stepIndex = {
+    login: 0, approve: 0, clit: 1, prod: 2, entry: 2, route: 3,
+    whys: 4, fix: 5, closed: 5, handover: 5, dash: 5,
+  }[view];
 
   const openRecord = ({ machine, part, code }) => {
     const rec = {
@@ -1539,8 +1669,8 @@ export default function App() {
     setView("prod");
   };
 
-  const saveCauses = (causes) => {
-    const upd = { ...active, causes };
+  const saveCauses = (causes, training) => {
+    const upd = { ...active, causes, training: training || null };
     setActive(upd);
     setRecords((r) => r.map((x) => (x.id === upd.id ? upd : x)));
     setView("fix");
@@ -1553,10 +1683,27 @@ export default function App() {
     setView("closed");
   };
 
+  /* --- vardiya aktarımı --- */
+  const submitHandover = (ho) => {
+    setPendingHandover((s) => ({ ...s, [ho.machine]: ho }));
+    setArchive((a) => [...a, ho]);
+    setOpId(null);
+    setChosenMachine(null);
+    setActive(null);
     setView("login");
   };
 
   const handleLogin = (id, machineChoice) => {
+    setOpId(id);
+    setChosenMachine(machineChoice);
+    const machine = machineChoice || OPERATORS[id].machine;
+    const waiting = pendingHandover[machine];
+    // Kendi gönderdiği raporu kendisi onaylayamaz
+    if (waiting && waiting.operatorId !== id) {
+      setIncomingReport(waiting);
+      setView("approve");
+    } else {
+      setView("clit");
     }
   };
 
@@ -1564,14 +1711,19 @@ export default function App() {
     const ho = incomingReport;
     const upd = { ...ho, approvedBy: opId, approvedAt: now().toISOString() };
     setArchive((a) => a.map((x) => (x.id === ho.id ? upd : x)));
+    setPendingHandover((s) => {
+      const c = { ...s };
+      delete c[ho.machine];
+      return c;
+    });
+    setIncomingReport(null);
+    setView("clit");
+  };
+
   return (
     <div className="app">
       <style>{CSS}</style>
       {view !== "login" && view !== "dash" && <StepRail step={stepIndex} />}
-      {view === "login" && (
-        <Login
-          onLogin={(id) => {
-            setOpId(id);
       {view === "login" && <Login onLogin={handleLogin} />}
       {view === "approve" && incomingReport && op && (
         <HandoverApproval handover={incomingReport} incoming={op} onApprove={approveHandover} />
