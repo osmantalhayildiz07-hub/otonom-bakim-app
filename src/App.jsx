@@ -227,6 +227,13 @@ const HT = {
   YAG: { t: "Yağ seviyesi düşük", route: "A" },
 };
 
+    } else {
+      rebuilt[k] = MACHINES[k];
+    }
+  });
+  Object.keys(MACHINES).forEach((k) => delete MACHINES[k]);
+  Object.assign(MACHINES, rebuilt);
+})();
 const MACHINE_LIST = Object.keys(MACHINES);
 
 const CLIT_TEMPLATE = {
@@ -264,6 +271,14 @@ const CLIT_META = {
 
 const MAINT_ARRIVAL_MIN = 15;
 
+    key: "diger",
+    label: "Diğer",
+    full: "Diğer Notlar",
+    icon: "📝",
+    hint: "Malzeme, temizlik, ziyaret, sonraki vardiyaya not",
+  },
+];
+
 const OPERATORS = {
   "OP-1042": { name: "Mehmet Yılmaz", machine: "BİSKÜVİ KALIP MAKİNESİ", shift: "Vardiya A" },
   "OP-2071": { name: "Ayşe Demir", machine: "FIRIN", shift: "Vardiya A" },
@@ -297,6 +312,7 @@ function seedRecords() {
     ["SİLİNDİRLER", "1080 Burç", "HT03", null, "B"],
     ["TAMBUR", "1170 Dişli", "HT04", 6, "A"],
     ["DEDEKTÖR", "1270 Fotosel", "HT14", 4, "A"],
+    ["2. SİGRES MAKİNESİ", "1800 Rezistans", "HT12", null, "B"],
   ];
   const base = Date.now() - 6 * 864e5;
   return seeds.map((s, i) => {
@@ -316,13 +332,112 @@ function seedRecords() {
   });
 }
 
+/* ---- örnek önceki vardiya raporları (demo) ---- */
+const PREV_SHIFT = {
+  "BİSKÜVİ KALIP MAKİNESİ": {
+    operatorName: "Hakan Çelik",
+    shift: "Vardiya C",
+    entries: {
+      isg: { clear: true, note: "" },
+      uretim: {
+        clear: false,
+        note: "Gece boyunca 2. formda çalışıldı. 04:20'de kalıp değişimi yapıldı, dönüşüm 25 dakika sürdü. Bir personel raporlu, hat 3 kişiyle döndü.",
+      },
+      bakim: {
+        clear: false,
+        note: "1040 Bıçak üzerinde hafif yapışma devam ediyor, her 2 saatte bir temizlik gerekiyor. Bakım ekibi sabah bakacak.",
+      },
+      diger: { clear: true, note: "" },
+    },
+  },
+  FIRIN: {
+    operatorName: "Sema Kaya",
+    shift: "Vardiya C",
+    entries: {
+      isg: { clear: true, note: "" },
+      uretim: { clear: true, note: "" },
+      bakim: {
+        clear: false,
+        note: "1220 Eşanjör sıcaklık dalgalanması sürüyor, MAINGO iş emri açık. Set değeri elle 4 derece yukarı alındı, sabah kontrol edilmeli.",
+      },
+      diger: {
+        clear: false,
+        note: "Fırın çıkışı zemin temizliği yapılamadı, sabah ekibine bırakıldı.",
+      },
+    },
+  },
+  SOLLAS: {
+    operatorName: "Emre Doğan",
+    shift: "Vardiya C",
+    entries: {
+      isg: {
+        clear: false,
+        note: "Sağ taraf koruma kapağı menteşesi gevşek, kapak tam oturmuyor. Dikkatli çalışın, İSG'ye bildirildi.",
+      },
+      uretim: { clear: true, note: "" },
+      bakim: { clear: true, note: "" },
+      diger: { clear: true, note: "" },
+    },
+  },
+  "1. SİGRES MAKİNESİ": {
+    operatorName: "Burak Şahin",
+    shift: "Vardiya C",
+    entries: {
+      isg: { clear: true, note: "" },
+      uretim: {
+        clear: false,
+        note: "Folyo bobini 03:10'da değiştirildi. Yeni bobinde hafif gerginlik farkı var, ilk yarım saat yakın takip edin.",
+      },
+      bakim: { clear: true, note: "" },
+      diger: { clear: true, note: "" },
+    },
+  },
+  "2. SİGRES MAKİNESİ": {
+    operatorName: "Elif Arslan",
+    shift: "Vardiya C",
+    entries: {
+      isg: { clear: true, note: "" },
+      uretim: { clear: true, note: "" },
+      bakim: {
+        clear: false,
+        note: "1800 Rezistans üzerinde yanma tespit edildi, MAINGO iş emri açık. Makine düşük hızda çalıştırıldı, bakım ekibi sabah müdahale edecek.",
+      },
+      diger: {
+        clear: false,
+        note: "Makas grubu her vardiya sonunda temizlenmeli, gece yoğunluk nedeniyle atlandı.",
+      },
+    },
+  },
+};
+
+function seedHandovers(records) {
+  const out = {};
+  Object.entries(PREV_SHIFT).forEach(([machine, d]) => {
+    out[machine] = {
+      id: uid(),
+      operatorId: "OP-9000",
+      operatorName: d.operatorName,
+      machine,
+      shift: d.shift,
+      submittedAt: new Date(Date.now() - 45 * 60000).toISOString(),
+      entries: d.entries,
+      openRecords: records
+        .filter((r) => r.machine === machine && (r.status === "open" || r.status === "escalated"))
+        .map((r) => ({ code: r.code, part: r.part, status: r.status })),
+      approvedBy: null,
+      approvedAt: null,
+    };
+  });
+  return out;
+}
+
 /* ---------------- shared bits ---------------- */
 function Pill({ tone = "slate", children }) {
   return <span className={"pill pill-" + tone}>{children}</span>;
 }
 
 function StepRail({ step }) {
-  const steps = ["Giriş", "CLIT", "Bildirim", "Yönlendirme", "5 Neden", "Kapanış"];
+  const steps = ["Giriş", "CLIT", "Bildirim", "Yönlendirme", "5 Neden", "Kapanış / Aktarım"];
   return (
     <div className="rail">
       {steps.map((s, i) => (
@@ -338,10 +453,18 @@ function StepRail({ step }) {
 /* ---------------- 1. LOGIN ---------------- */
 function Login({ onLogin }) {
   const [val, setVal] = useState("");
-  const err = val.length >= 7 && !OPERATORS[val.toUpperCase()];
+  const [machine, setMachine] = useState("");
+  const id = val.toUpperCase();
+  const known = OPERATORS[id];
+  const err = val.length >= 7 && !known;
+  const ready = !!known && !!machine;
+
+  // Sicil no girildiğinde varsayılan makineyi öner, operatör değiştirebilir
+  const pick = (m) => setMachine((cur) => (cur === m ? "" : m));
+
   return (
     <div className="screen center">
-      <div className="card login-card">
+      <div className="card login-card wide">
         <div className="brand">
           <div className="brand-mark">OB</div>
           <div>
@@ -349,26 +472,80 @@ function Login({ onLogin }) {
             <p className="muted">Bisküvi Üretim Hattı · Vardiya Başlangıcı</p>
           </div>
         </div>
-        <label className="lbl">Operatör kartını okutun veya sicil no girin</label>
-        <input
-          className={"input big " + (err ? "input-err" : "")}
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-          placeholder="OP-1042"
-          autoFocus
-        />
-        {err && <p className="err-txt">Bu sicil no tanımlı değil. Vardiya amirine başvurun.</p>}
-        <button
-          className="btn btn-primary btn-xl"
-          disabled={!OPERATORS[val.toUpperCase()]}
-          onClick={() => onLogin(val.toUpperCase())}
-        >
+
+        <div className="login-step">
+          <span className="step-badge">1</span>
+          <div className="login-step-body">
+            <label className="lbl">Operatör kartını okutun veya sicil no girin</label>
+            <input
+              className={"input big " + (err ? "input-err" : "")}
+              value={val}
+              onChange={(e) => setVal(e.target.value)}
+              placeholder="OP-1042"
+              autoFocus
+            />
+            {err && <p className="err-txt">Bu sicil no tanımlı değil. Vardiya amirine başvurun.</p>}
+            {known && (
+              <p className="login-ok">
+                ✓ {known.name} · {known.shift}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className={"login-step " + (!known ? "login-locked" : "")}>
+          <span className="step-badge">2</span>
+          <div className="login-step-body">
+            <div className="lbl-row">
+              <label className="lbl">Çalışacağınız makineyi seçin</label>
+              {machine && (
+                <button className="link-btn" onClick={() => setMachine("")}>
+                  Seçimi temizle
+                </button>
+              )}
+            </div>
+
+            <div className="mach-picker">
+              {MACHINE_LIST.map((m) => {
+                const on = machine === m;
+                return (
+                  <button
+                    key={m}
+                    className={"mach-opt " + (on ? "on" : "")}
+                    onClick={() => pick(m)}
+                    aria-pressed={on}
+                  >
+                    <span className={"radio " + (on ? "on" : "")} />
+                    <span className="mach-name">{m}</span>
+                    {known && known.machine === m && !on && <span className="mach-hint">atanmış</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {machine ? (
+              <p className="login-ok">✓ Seçilen makine: {machine}</p>
+            ) : (
+              <p className="muted sm">Yalnızca tek makine seçebilirsiniz. Seçtiğinize tekrar tıklarsanız iptal olur.</p>
+            )}
+          </div>
+        </div>
+
+        <button className="btn btn-primary btn-xl" disabled={!ready} onClick={() => onLogin(id, machine)}>
           Vardiyayı başlat
         </button>
+
         <div className="demo-ids">
-          {Object.entries(OPERATORS).map(([id, o]) => (
-            <button key={id} className="chip" onClick={() => setVal(id)}>
-              {id} · {o.name}
+          {Object.entries(OPERATORS).map(([k, o]) => (
+            <button
+              key={k}
+              className="chip"
+              onClick={() => {
+                setVal(k);
+                setMachine(o.machine);
+              }}
+            >
+              {k} · {o.name}
             </button>
           ))}
         </div>
@@ -459,7 +636,7 @@ function Clit({ op, onDone, onRaise }) {
 }
 
 /* ---------------- 3. PRODUCTION / REPORT ---------------- */
-function Production({ op, onReport, onDash, records }) {
+function Production({ op, onReport, onDash, onEndShift, records }) {
   const open = records.filter((r) => r.status === "open").length;
   return (
     <div className="screen">
@@ -485,6 +662,237 @@ function Production({ op, onReport, onDash, records }) {
         ⚠️ Anormallik bildir
       </button>
       <p className="muted center-txt">Bildirim anında kayıt açılır ve duruş süresi saymaya başlar.</p>
+
+      <div className="shift-end">
+        <div>
+          <h3>Vardiyanız bitiyor mu?</h3>
+          <p className="muted sm">
+            Vardiyayı kapatmadan önce İSG, üretim, bakım ve diğer başlıklarda aktarım raporu doldurmanız gerekir.
+          </p>
+        </div>
+        <button className="btn btn-dark btn-xl" onClick={onEndShift}>
+          Vardiyayı bitir
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 3b. SHIFT HANDOVER FORM ---------------- */
+function HandoverForm({ op, opId, records, onSubmit, onCancel }) {
+  const [entries, setEntries] = useState(() =>
+    HANDOVER_CATS.reduce((a, c) => ({ ...a, [c.key]: { clear: false, note: "" } }), {})
+  );
+
+  // Vardiya sırasında bu makinede kapanmamış kayıt var mı?
+  const openOnMachine = records.filter(
+    (r) => r.machine === op.machine && (r.status === "open" || r.status === "escalated")
+  );
+  const hasFault = openOnMachine.length > 0;
+
+  const set = (key, patch) => setEntries((s) => ({ ...s, [key]: { ...s[key], ...patch } }));
+
+  const catValid = (c) => {
+    const e = entries[c.key];
+    if (e.clear) return true;
+    return e.note.trim().length >= 3;
+  };
+  // Açık arıza varsa Bakım kategorisi "Sorun yok" olarak işaretlenemez
+  const bakimBlocked = hasFault && entries.bakim.clear;
+  const allValid = HANDOVER_CATS.every(catValid) && !bakimBlocked;
+  const doneCount = HANDOVER_CATS.filter(catValid).length;
+
+  return (
+    <div className="screen">
+      <header className="topbar">
+        <div>
+          <h2>Vardiya aktarım raporu</h2>
+          <p className="muted">
+            {op.name} · {op.machine} · {op.shift}
+          </p>
+        </div>
+        <div className="ho-progress">
+          <span className="muted sm">Tamamlanan</span>
+          <b>
+            {doneCount}/{HANDOVER_CATS.length}
+          </b>
+        </div>
+      </header>
+
+      {hasFault && (
+        <div className="card banner-warn">
+          <span className="banner-icon">⚠️</span>
+          <div>
+            <h3>Bu makinede kapanmamış kayıt var</h3>
+            <p className="muted sm">
+              {openOnMachine.map((r) => (r.code === "YAG" ? "YAĞ" : r.code) + " · " + r.part).join(" | ")}
+            </p>
+            <p className="muted sm">
+              Kayıt önceki vardiyalardan devrolmuş olabilir. Durumu sonraki vardiyaya yazılı olarak aktarın.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="ho-grid">
+        {HANDOVER_CATS.map((c) => {
+          const e = entries[c.key];
+          const blocked = c.key === "bakim" && hasFault;
+          const ok = catValid(c) && !(blocked && e.clear);
+          return (
+            <section key={c.key} className={"card ho-card " + (ok ? "ho-ok" : "")}>
+              <div className="ho-head">
+                <span className="ho-icon">{c.icon}</span>
+                <div>
+                  <h3>{c.full}</h3>
+                  <p className="muted sm">{c.hint}</p>
+                </div>
+                {ok && <span className="ho-tick">✓</span>}
+              </div>
+
+              <label className={"ho-clear " + (e.clear ? "on" : "") + (blocked ? " ho-disabled" : "")}>
+                <input
+                  type="checkbox"
+                  checked={e.clear}
+                  disabled={blocked}
+                  onChange={(ev) => set(c.key, { clear: ev.target.checked, note: ev.target.checked ? "" : e.note })}
+                />
+                <span>Sorun yok</span>
+                {blocked && <em className="ho-block-txt">Açık kayıt nedeniyle kapalı</em>}
+              </label>
+
+              {!e.clear && (
+                <>
+                  <textarea
+                    className="input area"
+                    rows={3}
+                    value={e.note}
+                    onChange={(ev) => set(c.key, { note: ev.target.value })}
+                    placeholder="Sonraki vardiyanın bilmesi gerekeni yazın…"
+                  />
+                  {e.note.trim().length > 0 && e.note.trim().length < 3 && (
+                    <p className="err-txt">Biraz daha ayrıntı yazın.</p>
+                  )}
+                </>
+              )}
+            </section>
+          );
+        })}
+      </div>
+
+      <div className="sticky-foot">
+        <button className="btn btn-ghost" onClick={onCancel}>
+          Vazgeç, üretime dön
+        </button>
+        <p className="muted">
+          {allValid ? "Rapor gönderilmeye hazır" : "Her kategoriyi işaretleyin veya doldurun"}
+        </p>
+        <button
+          className="btn btn-primary btn-xl"
+          disabled={!allValid}
+          onClick={() =>
+            onSubmit({
+              id: uid(),
+              operatorId: opId,
+              operatorName: op.name,
+              machine: op.machine,
+              shift: op.shift,
+              submittedAt: now().toISOString(),
+              entries,
+              openRecords: openOnMachine.map((r) => ({ code: r.code, part: r.part, status: r.status })),
+              approvedBy: null,
+              approvedAt: null,
+            })
+          }
+        >
+          Raporu gönder ve vardiyayı bitir
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 3c. SHIFT HANDOVER APPROVAL ---------------- */
+function HandoverApproval({ handover, incoming, onApprove }) {
+  const [read, setRead] = useState(false);
+  const issues = HANDOVER_CATS.filter((c) => !handover.entries[c.key].clear).length;
+
+  return (
+    <div className="screen">
+      <header className="topbar">
+        <div>
+          <h2>Önceki vardiya raporu</h2>
+          <p className="muted">Vardiyanıza başlamadan önce bu raporu okuyup onaylamanız gerekiyor.</p>
+        </div>
+        <Pill tone={issues ? "amber" : "green"}>
+          {issues ? issues + " konu devredildi" : "Devredilen sorun yok"}
+        </Pill>
+      </header>
+
+      <div className="card ho-meta">
+        <div>
+          <span className="ho-meta-l">Devreden</span>
+          <b>{handover.operatorName}</b>
+        </div>
+        <div>
+          <span className="ho-meta-l">Vardiya</span>
+          <b>{handover.shift}</b>
+        </div>
+        <div>
+          <span className="ho-meta-l">Makine</span>
+          <b>{handover.machine}</b>
+        </div>
+        <div>
+          <span className="ho-meta-l">Gönderim</span>
+          <b>{fmt(handover.submittedAt)}</b>
+        </div>
+      </div>
+
+      {handover.openRecords.length > 0 && (
+        <div className="card banner-warn">
+          <span className="banner-icon">⚠️</span>
+          <div>
+            <h3>Devralınan açık kayıtlar</h3>
+            <p className="muted sm">
+              {handover.openRecords
+                .map((r) => (r.code === "YAG" ? "YAĞ" : r.code) + " · " + r.part + (r.status === "escalated" ? " (MAINGO)" : ""))
+                .join(" | ")}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="ho-grid">
+        {HANDOVER_CATS.map((c) => {
+          const e = handover.entries[c.key];
+          return (
+            <section key={c.key} className={"card ho-card ho-read " + (e.clear ? "ho-clean" : "ho-issue")}>
+              <div className="ho-head">
+                <span className="ho-icon">{c.icon}</span>
+                <div>
+                  <h3>{c.full}</h3>
+                </div>
+                <Pill tone={e.clear ? "green" : "amber"}>{e.clear ? "Sorun yok" : "Not var"}</Pill>
+              </div>
+              {e.clear ? (
+                <p className="muted">Bu kategoride devredilen bir konu bulunmuyor.</p>
+              ) : (
+                <p className="ho-note">{e.note}</p>
+              )}
+            </section>
+          );
+        })}
+      </div>
+
+      <div className="sticky-foot">
+        <label className="check">
+          <input type="checkbox" checked={read} onChange={(e) => setRead(e.target.checked)} />
+          <span>Raporu okudum, devraldım</span>
+        </label>
+        <button className="btn btn-success btn-xl" disabled={!read} onClick={onApprove}>
+          ✓ Onayla ve vardiyayı başlat
+        </button>
+      </div>
     </div>
   );
 }
@@ -630,10 +1038,44 @@ function Routing({ rec, onA, onB }) {
   );
 }
 
+/* ---- Eğitim adı türetme (Operasyonel Mükemmellik) ---- */
+// Parça grubuna göre eğitim odağı
+const PART_TRAINING = [
+  [/sensör|fotosel|enkoder|switch|siviç/i, "Sensör Kalibrasyon ve Müdahale"],
+  [/motor|servo|redüktör|varyatör|sürücü/i, "Tahrik Sistemleri Kullanım ve Kontrol"],
+  [/bant|konveyör|kayış|kasnak|zincir/i, "Bant ve Tahrik Hattı Ayar"],
+  [/bıçak|kalıp|pres|makas|çene/i, "Kesim ve Kalıp Grubu Ayar"],
+  [/yağ|gres|salmastra|keçe|oring|o-ring|conta/i, "Yağlama ve Sızdırmazlık"],
+  [/rulman|burç|mil|şaft|kaplin|kama/i, "Rulman ve Mil Grubu Bakım"],
+  [/valf|vana|piston|manifolt|hava|pnömatik|silindir/i, "Pnömatik Sistem Kullanım"],
+  [/plc|program|pc|ekran|modül|kart|kumanda/i, "Operatör Panel ve PLC Arayüz"],
+  [/rezistans|termostat|termometre|eşanjör|serpantin|ısıtıcı/i, "Sıcaklık Kontrol Sistemleri"],
+  [/filtre|fan|blower|klima/i, "Hava ve Filtrasyon Sistemleri"],
+];
+
+// Hata koduna göre eğitim yaklaşımı
+const CODE_TRAINING = {
+  HT02: "Ayar ve Merkezleme Standardı",
+  HT04: "Tork ve Bağlantı Sıkma Standardı",
+  HT11: "Sıkışma Giderme ve Güvenli Müdahale",
+  HT13: "Standart Çalışma Talimatı ve Operatör Yetkinliği",
+  HT14: "Temizlik Standardı ve CLIT Uygulaması",
+  YAG: "Yağlama Standardı ve Seviye Kontrolü",
+};
+
+function deriveTraining(rec) {
+  const partFocus = PART_TRAINING.find(([re]) => re.test(rec.part));
+  const codeFocus = CODE_TRAINING[rec.code] || HT[rec.code].t;
+  if (partFocus) return partFocus[1] + " Eğitimi (" + codeFocus + ")";
+  return codeFocus + " Eğitimi";
+}
+
 /* ---------------- 6. FIVE WHYS ---------------- */
 function FiveWhys({ rec, onDone }) {
   const [answers, setAnswers] = useState([""]);
   const [found, setFound] = useState(false);
+  const [gap, setGap] = useState(false);
+  const training = useMemo(() => deriveTraining(rec), [rec]);
   const label = HT[rec.code].t;
 
   const question = (i) =>
@@ -696,12 +1138,52 @@ function FiveWhys({ rec, onDone }) {
       </div>
 
       {(found || answers.length === 5) && filled && (
-        <div className="sticky-foot">
-          <p className="muted">{answers.filter(Boolean).length} neden kaydedildi</p>
-          <button className="btn btn-primary btn-xl" onClick={() => onDone(answers.filter((x) => x.trim()))}>
-            Müdahale adımına geç
-          </button>
-        </div>
+        <>
+          <section className={"card kg-card " + (gap ? "kg-on" : "")}>
+            <label className="kg-check">
+              <input type="checkbox" checked={gap} onChange={(e) => setGap(e.target.checked)} />
+              <div>
+                <h3>Bilgi eksikliği</h3>
+                <p className="muted sm">
+                  Bu sorunu çözerken yetkinlik veya bilgi eksikliği yaşadıysanız işaretleyin. Operasyonel Mükemmellik
+                  ekibine eğitim talebi iletilir.
+                </p>
+              </div>
+            </label>
+
+            {gap && (
+              <div className="kg-detail">
+                <div className="kg-row">
+                  <span className="kg-l">Talep edilen eğitim</span>
+                  <b className="kg-training">{training}</b>
+                </div>
+                <div className="kg-row">
+                  <span className="kg-l">Gerekçe</span>
+                  <span>
+                    {rec.machine} → {rec.part} · {rec.code === "YAG" ? "YAĞ" : rec.code} {HT[rec.code].t}
+                  </span>
+                </div>
+                <div className="kg-row">
+                  <span className="kg-l">Gönderilecek birim</span>
+                  <span>Operasyonel Mükemmellik Ekibi</span>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <div className="sticky-foot">
+            <p className="muted">
+              {answers.filter(Boolean).length} neden kaydedildi
+              {gap && " · eğitim talebi eklenecek"}
+            </p>
+            <button
+              className="btn btn-primary btn-xl"
+              onClick={() => onDone(answers.filter((x) => x.trim()), gap ? training : null)}
+            >
+              Müdahale adımına geç
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
@@ -801,6 +1283,15 @@ function Closed({ rec, onBack }) {
         <p className="verdict-body">
           Onarım bitiş saati {fmt(rec.end)} olarak veritabanına yazıldı.
         </p>
+        {rec.training && (
+          <div className="mail-sent">
+            <span className="mail-icon">📧</span>
+            <div>
+              <b>Operasyonel Mükemmellik ekibine eğitim talebi maili başarıyla gönderildi.</b>
+              <p className="muted sm">Talep edilen eğitim: {rec.training}</p>
+            </div>
+          </div>
+        )}
         <button className="btn btn-primary btn-xl" onClick={onBack}>
           Üretime dön
         </button>
@@ -810,7 +1301,7 @@ function Closed({ rec, onBack }) {
 }
 
 /* ---------------- 9. DASHBOARD ---------------- */
-function Dashboard({ records, onBack }) {
+function Dashboard({ records, archive = [], onBack }) {
   const closed = records.filter((r) => r.status === "closed" && r.end);
   const mttr = closed.length ? Math.round(closed.reduce((a, r) => a + mins(r.start, r.end), 0) / closed.length) : 0;
   const saved = closed.reduce((a, r) => a + Math.max(0, MAINT_ARRIVAL_MIN - mins(r.start, r.end)), 0);
@@ -918,6 +1409,63 @@ function Dashboard({ records, onBack }) {
         </section>
       </div>
 
+      {archive.length > 0 && (
+        <section className="card">
+          <h3>Vardiya aktarım geçmişi</h3>
+          <div className="scroll-x">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Devreden</th>
+                  <th>Makine</th>
+                  <th>Vardiya</th>
+                  <th>Gönderim</th>
+                  <th>Devredilen konu</th>
+                  <th>Onay</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...archive].reverse().map((h) => {
+                  const issues = HANDOVER_CATS.filter((c) => !h.entries[c.key].clear);
+                  return (
+                    <tr key={h.id}>
+                      <td>{h.operatorName}</td>
+                      <td>{h.machine}</td>
+                      <td>{h.shift}</td>
+                      <td>{fmt(h.submittedAt)}</td>
+                      <td>{issues.length ? issues.map((c) => c.label).join(", ") : "—"}</td>
+                      <td>
+                        <Pill tone={h.approvedAt ? "green" : "amber"}>
+                          {h.approvedAt ? "Onaylandı" : "Onay bekliyor"}
+                        </Pill>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {records.some((r) => r.training) && (
+        <section className="card">
+          <h3>Eğitim talepleri · Operasyonel Mükemmellik</h3>
+          <div className="scroll-x">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Talep edilen eğitim</th>
+                  <th>Makine</th>
+                  <th>Parça</th>
+                  <th>Kod</th>
+                  <th>Tarih</th>
+                </tr>
+              </thead>
+          </div>
+        </section>
+      )}
+
       <section className="card">
         <h3>Kayıt tablosu</h3>
         <div className="scroll-x">
@@ -962,12 +1510,10 @@ function Dashboard({ records, onBack }) {
 /* ---------------- ROOT ---------------- */
 export default function App() {
   const [opId, setOpId] = useState(null);
+  const [chosenMachine, setChosenMachine] = useState(null);
   const [view, setView] = useState("login");
   const [records, setRecords] = useState(seedRecords);
   const [active, setActive] = useState(null);
-  const op = opId ? OPERATORS[opId] : null;
-
-  const stepIndex = { login: 0, clit: 1, prod: 2, entry: 2, route: 3, whys: 4, fix: 5, closed: 5, dash: 5 }[view];
 
   const openRecord = ({ machine, part, code }) => {
     const rec = {
@@ -1007,6 +1553,17 @@ export default function App() {
     setView("closed");
   };
 
+    setView("login");
+  };
+
+  const handleLogin = (id, machineChoice) => {
+    }
+  };
+
+  const approveHandover = () => {
+    const ho = incomingReport;
+    const upd = { ...ho, approvedBy: opId, approvedAt: now().toISOString() };
+    setArchive((a) => a.map((x) => (x.id === ho.id ? upd : x)));
   return (
     <div className="app">
       <style>{CSS}</style>
@@ -1015,9 +1572,9 @@ export default function App() {
         <Login
           onLogin={(id) => {
             setOpId(id);
-            setView("clit");
-          }}
-        />
+      {view === "login" && <Login onLogin={handleLogin} />}
+      {view === "approve" && incomingReport && op && (
+        <HandoverApproval handover={incomingReport} incoming={op} onApprove={approveHandover} />
       )}
       {view === "clit" && op && (
         <Clit
@@ -1027,7 +1584,22 @@ export default function App() {
         />
       )}
       {view === "prod" && op && (
-        <Production op={op} records={records} onReport={() => setView("entry")} onDash={() => setView("dash")} />
+        <Production
+          op={op}
+          records={records}
+          onReport={() => setView("entry")}
+          onDash={() => setView("dash")}
+          onEndShift={() => setView("handover")}
+        />
+      )}
+      {view === "handover" && op && (
+        <HandoverForm
+          op={op}
+          opId={opId}
+          records={records}
+          onSubmit={submitHandover}
+          onCancel={() => setView("prod")}
+        />
       )}
       {view === "entry" && op && <ErrorEntry op={op} onSubmit={openRecord} onCancel={() => setView("prod")} />}
       {view === "route" && active && <Routing rec={active} onA={() => setView("whys")} onB={escalate} />}
@@ -1042,7 +1614,9 @@ export default function App() {
           }}
         />
       )}
-      {view === "dash" && <Dashboard records={records} onBack={() => setView(op ? "prod" : "login")} />}
+      {view === "dash" && (
+        <Dashboard records={records} archive={archive} onBack={() => setView(op ? "prod" : "login")} />
+      )}
     </div>
   );
 }
