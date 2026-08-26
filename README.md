@@ -138,6 +138,3 @@ Bu uygulama bir **frontend prototipidir**:
 - Farklı cihazlar arasında veri paylaşımı yoktur
 - Gerçek kullanım için PostgreSQL veritabanı ve bir backend API gereklidir (şema dokümantasyonu proje içinde mevcuttur)
 
-## Proje Bağlamı
-
-ODTÜ Endüstri Mühendisliği — Sistem Tasarımı dersi kapsamında, Ülker Ankara bisküvi üretim hattı için geliştirilmiş otonom bakım sistemi prototipi.
